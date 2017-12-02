@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.UriInfo;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
-import org.opendaylight.controller.sal.core.api.model.SchemaService;
 import org.opendaylight.controller.sal.core.api.mount.MountProvisionListener;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.netconf.sal.rest.doc.impl.BaseYangSwaggerGenerator;
 import org.opendaylight.netconf.sal.rest.doc.swagger.Api;
 import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
@@ -50,7 +50,7 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
     private final Object lock = new Object();
 
     private final AtomicLong idKey = new AtomicLong(0);
-    private SchemaService globalSchema;
+    private DOMSchemaService globalSchema;
     private static boolean newDraft;
 
     public Map<String, Long> getInstanceIdentifiers() {
@@ -65,7 +65,7 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
         return urlToId;
     }
 
-    public void setGlobalSchema(final SchemaService globalSchema) {
+    public void setGlobalSchema(final DOMSchemaService globalSchema) {
         this.globalSchema = globalSchema;
     }
 

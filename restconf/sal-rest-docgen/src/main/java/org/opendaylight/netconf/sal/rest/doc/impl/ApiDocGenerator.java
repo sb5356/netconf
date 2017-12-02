@@ -9,7 +9,7 @@ package org.opendaylight.netconf.sal.rest.doc.impl;
 
 import com.google.common.base.Preconditions;
 import javax.ws.rs.core.UriInfo;
-import org.opendaylight.controller.sal.core.api.model.SchemaService;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
 import org.opendaylight.netconf.sal.rest.doc.swagger.ResourceList;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -21,7 +21,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 public class ApiDocGenerator extends BaseYangSwaggerGenerator {
 
     private static final ApiDocGenerator INSTANCE = new ApiDocGenerator();
-    private SchemaService schemaService;
+    private DOMSchemaService schemaService;
 
     public ResourceList getResourceListing(final UriInfo uriInfo) {
         Preconditions.checkState(schemaService != null);
@@ -47,7 +47,7 @@ public class ApiDocGenerator extends BaseYangSwaggerGenerator {
         super.setDraft(newDraft);
     }
 
-    public void setSchemaService(final SchemaService schemaService) {
+    public void setSchemaService(final DOMSchemaService schemaService) {
         this.schemaService = schemaService;
     }
 }
