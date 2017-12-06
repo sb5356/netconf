@@ -9,16 +9,18 @@ package org.opendaylight.netconf.sal.rest.doc.impl;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+
+import io.swagger.models.Swagger;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.opendaylight.netconf.sal.rest.doc.api.ApiDocService;
 import org.opendaylight.netconf.sal.rest.doc.mountpoints.MountPointSwagger;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ResourceList;
 
 /**
  * This service generates swagger (See
@@ -54,7 +56,7 @@ public class ApiDocServiceImpl implements ApiDocService {
         } else {
             generator.setDraft(false);
         }
-        final ResourceList rootDoc = generator.getResourceListing(uriInfo);
+        final Swagger rootDoc = generator.getRootSwagger(uriInfo);
 
         return Response.ok(rootDoc).build();
     }
@@ -70,7 +72,7 @@ public class ApiDocServiceImpl implements ApiDocService {
         } else {
             generator.setDraft(false);
         }
-        final ApiDeclaration doc = generator.getApiDeclaration(module, revision, uriInfo);
+        final Swagger doc = generator.getModuleSwagger(module, revision, uriInfo);
         return Response.ok(doc).build();
     }
 
@@ -82,7 +84,6 @@ public class ApiDocServiceImpl implements ApiDocService {
         return Response.seeOther(uriInfo.getBaseUriBuilder().path("../explorer/index.html").build()).build();
     }
 
-    @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
     public synchronized Response getListOfMounts(final UriInfo uriInfo) {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -106,7 +107,7 @@ public class ApiDocServiceImpl implements ApiDocService {
 
     @Override
     public synchronized Response getMountRootDoc(final String instanceNum, final UriInfo uriInfo) {
-        final ResourceList resourceList;
+        final Swagger resourceList;
         if (isNew(uriInfo)) {
             resourceList = MountPointSwagger.getInstanceDraft18().getResourceList(uriInfo, Long.parseLong(instanceNum));
         } else {
@@ -118,7 +119,7 @@ public class ApiDocServiceImpl implements ApiDocService {
     @Override
     public synchronized Response getMountDocByModule(final String instanceNum, final String module,
             final String revision, final UriInfo uriInfo) {
-        final ApiDeclaration api;
+        final Swagger api;
         if (isNew(uriInfo)) {
             api = MountPointSwagger.getInstanceDraft18().getMountPointApi(uriInfo, Long.parseLong(instanceNum), module,
                     revision);

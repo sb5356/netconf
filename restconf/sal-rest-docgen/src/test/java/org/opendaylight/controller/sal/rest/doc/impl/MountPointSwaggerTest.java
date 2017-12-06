@@ -13,9 +13,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.base.Optional;
+
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.Swagger;
+
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.ws.rs.core.UriInfo;
@@ -25,11 +32,6 @@ import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
 import org.opendaylight.controller.sal.core.api.model.SchemaService;
 import org.opendaylight.netconf.sal.rest.doc.mountpoints.MountPointSwagger;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Api;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Operation;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Resource;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ResourceList;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -83,12 +85,12 @@ public class MountPointSwaggerTest {
         final UriInfo mockInfo = setUpSwaggerForDocGeneration();
         this.swagger.onMountPointCreated(INSTANCE_ID); // add this ID into the list of
                                                  // mount points
-        final ResourceList resourceList = this.swagger.getResourceList(mockInfo, 1L);
-
-        Resource dataStoreResource = null;
-        for (final Resource r : resourceList.getApis()) {
-            if (r.getPath().endsWith("/Datastores(-)")) {
-                dataStoreResource = r;
+        final Swagger resourceList = this.swagger.getResourceList(mockInfo, 1L);
+        TestingUtils.printSwagger(resourceList);
+        Path dataStoreResource = null;
+        for (final Entry<String, Path> r : resourceList.getPaths().entrySet()) {
+            if (r.getKey().endsWith("/Datastores(-)")) {
+                dataStoreResource = r.getValue();
             }
         }
         assertNotNull("Failed to find data store resource", dataStoreResource);
@@ -100,20 +102,19 @@ public class MountPointSwaggerTest {
         this.swagger.onMountPointCreated(INSTANCE_ID); // add this ID into the list of
                                                  // mount points
 
-        final ApiDeclaration mountPointApi = this.swagger.getMountPointApi(mockInfo, 1L, "Datastores", "-");
+        final Swagger mountPointApi = this.swagger.getMountPointApi(mockInfo, 1L, "Datastores", "-");
         assertNotNull("failed to find Datastore API", mountPointApi);
-        final List<Api> apis = mountPointApi.getApis();
+        final Map<String, Path> apis = mountPointApi.getPaths();
         assertEquals("Unexpected api list size", 3, apis.size());
 
         final Set<String> actualApis = new TreeSet<>();
-        for (final Api api : apis) {
-            actualApis.add(api.getPath());
-            final List<Operation> operations = api.getOperations();
-            assertEquals("unexpected operation size on " + api.getPath(), 1, operations.size());
-            assertEquals("unexpected operation method " + api.getPath(), "GET", operations.get(0)
-                    .getMethod());
-            assertNotNull("expected non-null desc on " + api.getPath(), operations.get(0)
-                    .getNotes());
+        for (final Entry<String, Path> api : apis.entrySet()) {
+            actualApis.add(api.getKey());
+            final List<Operation> operations = api.getValue().getOperations();
+            assertEquals("unexpected operation size on " + api.getValue(), 1, operations.size());
+            assertNotNull("expected non-null operation " + api.getValue().getGet(), api.getValue().getGet().getClass());
+            assertNotNull("expected non-null desc on " + api.getValue(), operations.get(0)
+                    .getDescription());
         }
         final Set<String> expectedApis = new TreeSet<>(Arrays.asList(new String[] {
             "/config" + INSTANCE_URL + "yang-ext:mount",

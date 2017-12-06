@@ -17,7 +17,6 @@ public class ApiDocApplication extends Application {
     public Set<Object> getSingletons() {
         Set<Object> singletons = new HashSet<>();
         singletons.add(ApiDocServiceImpl.getInstance());
-        singletons.add(new JaxbContextResolver());
         return singletons;
     }
 }

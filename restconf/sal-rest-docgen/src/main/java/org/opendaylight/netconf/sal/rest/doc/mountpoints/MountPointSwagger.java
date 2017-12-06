@@ -8,26 +8,25 @@
 package org.opendaylight.netconf.sal.rest.doc.mountpoints;
 
 import com.google.common.base.Optional;
-import java.util.Collections;
+
+import io.swagger.models.Path;
+import io.swagger.models.Swagger;
+import io.swagger.models.Operation;
+
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
 import org.opendaylight.controller.sal.core.api.mount.MountProvisionListener;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.netconf.sal.rest.doc.impl.BaseYangSwaggerGenerator;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Api;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Operation;
-import org.opendaylight.netconf.sal.rest.doc.swagger.Resource;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ResourceList;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifierWithPredicates;
@@ -39,7 +38,6 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
 
     private static final String DATASTORES_REVISION = "-";
     private static final String DATASTORES_LABEL = "Datastores";
-    private static final String RESTCONF_DRAFT = "18";
     private static final AtomicReference<MountPointSwagger> SELF_REF = new AtomicReference<>();
 
     private DOMMountPointService mountService;
@@ -108,25 +106,20 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
         return generateUrlPrefixFromInstanceID(key, modName) + "yang-ext:mount";
     }
 
-    public ResourceList getResourceList(final UriInfo uriInfo, final Long id) {
+    public Swagger getResourceList(final UriInfo uriInfo, final Long id) {
         final YangInstanceIdentifier iid = getInstanceId(id);
         if (iid == null) {
             return null; // indicating not found.
         }
         final SchemaContext context = getSchemaContext(iid);
+        final Swagger swagger = createInitialSwagger(uriInfo);
         if (context == null) {
-            return createResourceList();
+            return swagger;
         }
-        final List<Resource> resources = new LinkedList<>();
-        final Resource dataStores = new Resource();
-        dataStores.setDescription("Provides methods for accessing the data stores.");
-        dataStores.setPath(generatePath(uriInfo, DATASTORES_LABEL, DATASTORES_REVISION));
-        resources.add(dataStores);
-        final String urlPrefix = getYangMountUrl(iid);
-        final ResourceList list = super.getResourceListing(uriInfo, context, urlPrefix);
-        resources.addAll(list.getApis());
-        list.setApis(resources);
-        return list;
+        final String urlPrefix = getYangMountUrl(iid) + "/" + generateCacheKey(DATASTORES_LABEL, DATASTORES_REVISION);
+        super.getResourceListing(uriInfo, context, urlPrefix, swagger);
+        swagger.getInfo().setDescription("Provides methods for accessing the data stores.");
+        return swagger;
     }
 
     private YangInstanceIdentifier getInstanceId(final Long id) {
@@ -155,7 +148,7 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
         return context;
     }
 
-    public ApiDeclaration getMountPointApi(final UriInfo uriInfo, final Long id, final String module,
+    public Swagger getMountPointApi(final UriInfo uriInfo, final Long id, final String module,
             final String revision) {
         final YangInstanceIdentifier iid = getInstanceId(id);
         final SchemaContext context = getSchemaContext(iid);
@@ -170,31 +163,30 @@ public class MountPointSwagger extends BaseYangSwaggerGenerator implements Mount
         return super.getApiDeclaration(module, revision, uriInfo, context, urlPrefix);
     }
 
-    private ApiDeclaration generateDataStoreApiDoc(final UriInfo uriInfo, final String context) {
-        final List<Api> apis = new LinkedList<>();
-        apis.add(createGetApi("config", "Queries the config (startup) datastore on the mounted hosted.", context));
-        apis.add(createGetApi("operational", "Queries the operational (running) datastore on the mounted hosted.",
-                context));
-        apis.add(createGetApi("operations", "Queries the available operations (RPC calls) on the mounted hosted.",
-                context));
+    private Swagger generateDataStoreApiDoc(final UriInfo uriInfo, final String context) {
+        final Map<String, Path> paths = new HashMap<>();
+        final Map.Entry<String, Path> config = createGetApi("config", "Queries the config (startup) datastore on the mounted hosted.", context);
+        paths.put(config.getKey(), config.getValue());
+        final Map.Entry<String, Path> operational = createGetApi("operational", "Queries the operational (running) datastore on the mounted hosted.", context);
+        paths.put(operational.getKey(), operational.getValue());
+        final Map.Entry<String, Path> operations = createGetApi("operations", "Queries the available operations (RPC calls) on the mounted hosted.", context);
+        paths.put(operations.getKey(), operations.getValue());
 
-        final ApiDeclaration declaration = super.createApiDeclaration(createBasePathFromUriInfo(uriInfo));
-        declaration.setApis(apis);
+        final Swagger declaration = super.createInitialSwagger(uriInfo);
+        declaration.setPaths(paths);
         return declaration;
 
     }
 
-    private Api createGetApi(final String datastore, final String note, final String context) {
+    private ImmutablePair<String, Path> createGetApi(final String datastore, final String description, final String context) {
         final Operation getConfig = new Operation();
-        getConfig.setMethod("GET");
-        getConfig.setNickname("GET " + datastore);
-        getConfig.setNotes(note);
+        getConfig.setOperationId("GET " + datastore);
+        getConfig.setDescription(description);
 
-        final Api api = new Api();
-        api.setPath(getDataStorePath(datastore, context).concat(getContent(datastore)));
-        api.setOperations(Collections.singletonList(getConfig));
+        final Path api = new Path();
+        api.setGet(getConfig);
 
-        return api;
+        return new ImmutablePair<String, Path>(getDataStorePath(datastore, context).concat(getContent(datastore)), api);
     }
 
     public void setMountService(final DOMMountPointService mountService) {

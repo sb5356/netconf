@@ -8,10 +8,11 @@
 package org.opendaylight.netconf.sal.rest.doc.impl;
 
 import com.google.common.base.Preconditions;
+
+import io.swagger.models.Swagger;
+
 import javax.ws.rs.core.UriInfo;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ApiDeclaration;
-import org.opendaylight.netconf.sal.rest.doc.swagger.ResourceList;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
@@ -23,14 +24,14 @@ public class ApiDocGenerator extends BaseYangSwaggerGenerator {
     private static final ApiDocGenerator INSTANCE = new ApiDocGenerator();
     private DOMSchemaService schemaService;
 
-    public ResourceList getResourceListing(final UriInfo uriInfo) {
+    public Swagger getRootSwagger(final UriInfo uriInfo) {
         Preconditions.checkState(schemaService != null);
         final SchemaContext schemaContext = schemaService.getGlobalContext();
         Preconditions.checkState(schemaContext != null);
         return super.getResourceListing(uriInfo, schemaContext, "");
     }
 
-    public ApiDeclaration getApiDeclaration(final String module, final String revision, final UriInfo uriInfo) {
+    public Swagger getModuleSwagger(final String module, final String revision, final UriInfo uriInfo) {
         final SchemaContext schemaContext = schemaService.getGlobalContext();
         Preconditions.checkState(schemaContext != null);
         return super.getApiDeclaration(module, revision, uriInfo, schemaContext, "");

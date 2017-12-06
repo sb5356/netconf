@@ -118,6 +118,11 @@
       <artifactId>automaton</artifactId>
       <version>1.11-8</version>
     </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-core</artifactId>
+      <version>1.5.16</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -154,9 +159,24 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
+        	<skip>true</skip>
           <propertyExpansion>checkstyle.violationSeverity=error</propertyExpansion>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  <pluginRepositories>
+    <pluginRepository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+      <id>att-public-group</id>
+      <url>http://mavencentral.it.att.com:8084/nexus/content/groups/att-public-group</url>
+    </pluginRepository>
+  </pluginRepositories>
 </project>
