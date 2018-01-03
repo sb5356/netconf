@@ -52,7 +52,7 @@ public class MountPointSwaggerTest {
     public void setUp() throws Exception {
         this.swagger = new MountPointSwagger();
         this.helper = new DocGenTestHelper();
-        this.helper.setUp();
+        this.helper.setUp("/yang/toaster", "/yang/toaster2", "/yang/opflex", "/yang/toaster-augmented");
         this.schemaContext = this.helper.getSchemaContext();
     }
 

@@ -45,9 +45,12 @@ import org.opendaylight.controller.sal.core.api.model.SchemaService;
 import org.opendaylight.netconf.sal.rest.doc.impl.ApiDocGenerator;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ApiDocGeneratorTest {
 	
+    private static final Logger LOG = LoggerFactory.getLogger(ApiDocGeneratorTest.class);
 
     public static final String HTTP_HOST = "http://host";
     private static final String NAMESPACE = "http://netconfcentral.org/ns/toaster2";
@@ -57,7 +60,6 @@ public class ApiDocGeneratorTest {
     private static final Date REVISION_2 = Date.valueOf(STRING_DATE);
     private ApiDocGenerator generator;
     private DocGenTestHelper helper;
-    private SchemaContext schemaContext;
     
     @Mock
     private UriInfo info;
@@ -68,9 +70,6 @@ public class ApiDocGeneratorTest {
         this.generator = new ApiDocGenerator();
         generator.setDraft(false);
         this.helper = new DocGenTestHelper();
-        this.helper.setUp();
-
-        this.schemaContext = this.helper.getSchemaContext();
         
         Mockito.when(info.getBaseUri()).thenReturn(new URI("http://localhost:8080/restconf"));
     } 
@@ -85,20 +84,21 @@ public class ApiDocGeneratorTest {
      */
     @Test
     public void testGetModuleDoc() throws Exception {
-        Preconditions.checkArgument(this.helper.getModules() != null, "No modules found");
+        this.helper.setUp( "/yang/toaster-augmented", "/yang/toaster2");
 
-        for (final Module m : this.helper.getSchemaContext().getModules()) {
-            if (m.getQNameModule().getNamespace().toString().equals(NAMESPACE)
-                    && m.getQNameModule().getRevision().equals(DATE)) {
-                final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
-                        this.schemaContext);
-                TestingUtils.printSwagger(doc);
-                validateToaster(doc);
-                validateTosterDocContainsModulePrefixes(doc);
-                validateSwaggerModules(doc);
-                validateSwaggerApisForPost(doc);
-            }
-        }
+        Preconditions.checkArgument(this.helper.getModules() != null, "No modules found");
+        Preconditions.checkArgument(this.helper.getSchemaContext().getModules().stream().findFirst().isPresent(), "No modules found");
+        
+        final Module m = this.helper.getSchemaContext().getModules().stream().findFirst().get();
+
+        LOG.debug(m.getQNameModule().getNamespace().toString());
+        final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
+        		this.helper.getSchemaContext());
+        TestingUtils.printSwagger(doc);
+        validateToaster(doc);
+        validateTosterDocContainsModulePrefixes(doc);
+        validateSwaggerModules(doc);
+        validateSwaggerApisForPost(doc);
     }
 
     /**
@@ -234,45 +234,45 @@ public class ApiDocGeneratorTest {
 
     @Test
     public void testEdgeCases() throws Exception {
+        this.helper.setUp("/yang/toaster");
+
         Preconditions.checkArgument(this.helper.getModules() != null, "No modules found");
+        Preconditions.checkArgument(this.helper.getSchemaContext().getModules().stream().findFirst().isPresent(), "No modules found");
+        
+        final Module m = this.helper.getSchemaContext().getModules().stream().findFirst().get();
 
-        for (final Module m : this.helper.getModules()) {
-            if (m.getQNameModule().getNamespace().toString().equals(NAMESPACE_2)
-                    && m.getQNameModule().getRevision().equals(REVISION_2)) {
-                final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
-                        this.schemaContext);
-                assertNotNull(doc);
+        final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
+        		this.helper.getSchemaContext());
+        assertNotNull(doc);
 
-                // testing bugs.opendaylight.org bug 1290. UnionType model type.
-                final Map<String, Model> jsonString = doc.getDefinitions();
-                assertEquals("", jsonString.get("testUnion"));
-            }
-        }
+        // testing bugs.opendaylight.org bug 1290. UnionType model type.
+        final Map<String, Model> jsonString = doc.getDefinitions();
+        assertEquals("", jsonString.get("testUnion"));
     }
 
     @Test
     public void testRPCsModel() throws Exception {
+        this.helper.setUp("/yang/toaster");
+
         Preconditions.checkArgument(this.helper.getModules() != null, "No modules found");
+        Preconditions.checkArgument(this.helper.getSchemaContext().getModules().stream().findFirst().isPresent(), "No modules found");
+        
+        final Module m = this.helper.getSchemaContext().getModules().stream().findFirst().get();
 
-        for (final Module m : this.helper.getModules()) {
-            if (m.getQNameModule().getNamespace().toString().equals(NAMESPACE_2)
-                    && m.getQNameModule().getRevision().equals(REVISION_2)) {
-                final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
-                        this.schemaContext);
-                assertNotNull(doc);
+        final Swagger doc = this.generator.getSwaggerDocSpec(m, info, "",
+        		this.helper.getSchemaContext());
+        assertNotNull(doc);
 
-                final Map<String, Model> models = doc.getDefinitions();
-                final Model inputTop = models.get("(make-toast)input-TOP");
-                Property prop = inputTop.getProperties().get("toaster:input");
-                assertNotNull(prop);
-                assertEquals("object", prop.getType());
-                assertEquals("#/definitions/(make-toast)input", ((RefProperty)((ObjectProperty)prop).getProperties().get("items")).get$ref());
-                final Model input = models.get("(make-toast)input");
-                final Map<String, Property> properties = input.getProperties();
-                assertTrue(properties.containsKey("toaster:toasterDoneness"));
-                assertTrue(properties.containsKey("toaster:toasterToastType"));
-            }
-        }
+        final Map<String, Model> models = doc.getDefinitions();
+        final Model inputTop = models.get("(make-toast)input-TOP");
+        Property prop = inputTop.getProperties().get("toaster:input");
+        assertNotNull(prop);
+        assertEquals("object", prop.getType());
+        assertEquals("#/definitions/(make-toast)input", ((RefProperty)((ObjectProperty)prop).getProperties().get("items")).get$ref());
+        final Model input = models.get("(make-toast)input");
+        final Map<String, Property> properties = input.getProperties();
+        assertTrue(properties.containsKey("toaster:toasterDoneness"));
+        assertTrue(properties.containsKey("toaster:toasterToastType"));
     }
 
     /**
@@ -335,12 +335,14 @@ public class ApiDocGeneratorTest {
 
     @Test
     public void testGetResourceListing() throws Exception {
+        this.helper.setUp("/yang/toaster", "/yang/toaster2", "/yang/opflex", "/yang/toaster-augemented");
+            	
         final UriInfo info = this.helper.createMockUriInfo(HTTP_HOST);
-        final SchemaService mockSchemaService = this.helper.createMockSchemaService(this.schemaContext);
+        final SchemaService mockSchemaService = this.helper.createMockSchemaService(this.helper.getSchemaContext());
 
         this.generator.setSchemaService(mockSchemaService);
 
-        final Swagger resourceListing = this.generator.getResourceListing(info, this.schemaContext, "");
+        final Swagger resourceListing = this.generator.getResourceListing(info, this.helper.getSchemaContext(), "");
 
         String toaster = null;
         String toaster2 = null;

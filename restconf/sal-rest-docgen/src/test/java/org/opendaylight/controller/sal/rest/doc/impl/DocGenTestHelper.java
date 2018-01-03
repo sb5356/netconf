@@ -35,24 +35,31 @@ import org.opendaylight.yangtools.yang.test.util.YangParserTestUtils;
 
 public class DocGenTestHelper {
 
+	public DocGenTestHelper() {
+        this.mapper = new ObjectMapper();
+        this.mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+	}
+	
     private Set<Module> modules;
     private ObjectMapper mapper;
     private SchemaContext schemaContext;
 
-    public Set<Module> loadModules(final String resourceDirectory)
+    public Set<Module> loadModules(final String... resourceDirectory)
             throws URISyntaxException, FileNotFoundException, ReactorException {
-
-        final URI resourceDirUri = getClass().getResource(resourceDirectory).toURI();
-        final File testDir = new File(resourceDirUri);
-        final String[] fileList = testDir.list();
-        if (fileList == null) {
-            throw new FileNotFoundException(resourceDirectory.toString());
-        }
         final List<File> files = new ArrayList<>();
-        for (final String fileName : fileList) {
-            files.add(new File(testDir, fileName));
-        }
 
+    	for(String dir : resourceDirectory) {
+            final URI resourceDirUri = getClass().getResource(dir).toURI();
+            final File testDir = new File(resourceDirUri);
+            final String[] fileList = testDir.list();
+            if (fileList == null) {
+                throw new FileNotFoundException(dir.toString());
+            }
+
+            for (final String fileName : fileList) {
+                files.add(new File(testDir, fileName));
+            }
+    	}
         this.schemaContext = YangParserTestUtils.parseYangSources(files);
         return this.schemaContext.getModules();
     }
@@ -61,10 +68,8 @@ public class DocGenTestHelper {
         return this.modules;
     }
 
-    public void setUp() throws Exception {
-        this.modules = loadModules("/yang");
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+    public void setUp(String... path) throws Exception {
+        this.modules = loadModules(path);
     }
 
     public SchemaContext getSchemaContext() {

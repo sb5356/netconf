@@ -221,8 +221,8 @@ public class BaseYangSwaggerGenerator {
         if (!doc.getPaths().isEmpty()) {
             try {
             	doc.setDefinitions(this.modelConverter.convertToModels(module, schemaContext));
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(this.mapper.writeValueAsString(doc));
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace(this.mapper.writeValueAsString(doc));
                 }
             } catch (IOException e) {
                 LOG.error("Exception occured in ModelGenerator", e);

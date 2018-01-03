@@ -34,7 +34,7 @@ public class ModelGeneratorTest {
     @Before
     public void setUp() throws Exception {
         this.helper = new DocGenTestHelper();
-        this.helper.setUp();
+        this.helper.setUp("/yang/opflex");
         this.schemaContext = this.helper.getSchemaContext();
     }
 

@@ -24,9 +24,9 @@ public abstract class TestingUtils {
             final ObjectMapper mapper = new ObjectMapper(new JsonFactory());
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             mapper.writeValue(writer, swagger);
-            LOG.warn(writer.toString());
+            LOG.debug(writer.toString());
         } else {
-            LOG.warn("TestingUtils.printSwagger: null swagger returned");
+            LOG.debug("TestingUtils.printSwagger: null swagger returned");
         }
     }
 }

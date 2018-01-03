@@ -320,7 +320,7 @@ public class ModelGenerator {
         for (final DataSchemaNode childNode : dataNodeContainer.getChildNodes()) {
             if (childNode instanceof ListSchemaNode || childNode instanceof ContainerSchemaNode) {
                 final RefProperty items = new RefProperty();
-                items.set$ref(parentName + "(config)" + childNode.getQName().getLocalName());
+                items.set$ref(parentName + OperationBuilder.CONFIG + childNode.getQName().getLocalName());
                 if(childNode instanceof ListSchemaNode) {
 	                final ArrayProperty property = new ArrayProperty();
 	                property.setItems(items);
@@ -490,7 +490,7 @@ public class ModelGenerator {
         	property = processEnumType((EnumTypeDefinition) leafTypeDef);
 
         } else if (leafTypeDef instanceof IdentityrefTypeDefinition) {
-        	property = processIdentityrefType((IdentityrefTypeDefinition) leafTypeDef);
+        	property = processIdentityrefType(node, schemaContext, (IdentityrefTypeDefinition) leafTypeDef);
         	
         } else if (leafTypeDef instanceof StringTypeDefinition) {
         	property = processStringType(leafTypeDef, node.getQName().getLocalName());
@@ -562,10 +562,18 @@ public class ModelGenerator {
 		return property;
 	}
 
-	private RefProperty processIdentityrefType(final IdentityrefTypeDefinition leafTypeDef) {
+	private RefProperty processIdentityrefType(final DataSchemaNode node, final SchemaContext schemaContext, 
+			final IdentityrefTypeDefinition leafTypeDef) {
 		final RefProperty property = new RefProperty();
-        final String name = topLevelModule.getName();
-        property.set$ref(name + ":" + ((IdentityrefTypeDefinition) leafTypeDef).getIdentity().getQName().getLocalName());
+		final Module module = findModule(schemaContext, leafTypeDef.getQName());
+        final String name;
+        if(topLevelModule.getName().equals(module.getName())) {
+        	//if the module is the same as the topLevelModule its in the current namespace and doesnt need the module name
+        	name = "";
+        } else {
+        	name = module.getName() + ":";
+        }
+    	property.set$ref(name + ((IdentityrefTypeDefinition) leafTypeDef).getIdentity().getQName().getLocalName());
 		return property;
 	}
 
