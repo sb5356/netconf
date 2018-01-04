@@ -30,28 +30,35 @@ public final class OperationBuilder {
         CONSUMES_PUT_POST.add("application/xml");
     }
     
-    public static Path post(Path path, String nodeName, String description, String parentName, DataNodeContainer node, List<Parameter> params) {
-        final Post postBuilder = new Post(nodeName, parentName, description, node);
+    public static Path configPost(final Path path, final String nodeName, final String description, final String parentName, final DataNodeContainer node, final List<Parameter> params) {
+        final Post postBuilder = new ConfigPost(nodeName, parentName, description, node);
         postBuilder.pathParams(params);
     	path.post(postBuilder.build());
     	return path;
     }
     
-    public static Path get(Path path, String nodeName, String description, Boolean isConfig, List<Parameter> params) {
+    public static Path operationalPost(final Path path, final String nodeName, final String description, final String parentName, final DataNodeContainer requestNode, final DataNodeContainer responseNode, final List<Parameter> params) {
+        final Post postBuilder = new OperationalPost(nodeName, parentName, description, requestNode, responseNode);
+        postBuilder.pathParams(params);
+    	path.post(postBuilder.build());
+    	return path;
+    }
+    
+    public static Path get(final Path path, final String nodeName, final String description, final Boolean isConfig, final List<Parameter> params) {
         final Get getBuilder = new Get(nodeName, description, isConfig);
         getBuilder.pathParams(params);
     	path.get(getBuilder.build());
     	return path;
     }
     
-	public static Path put(Path path, String nodeName, String description, String parentName, List<Parameter> params) {
+	public static Path put(final Path path, final String nodeName, final String description, final String parentName, final List<Parameter> params) {
         final Put putBuilder = new Put(nodeName, description, parentName);
         putBuilder.pathParams(params);
     	path.put(putBuilder.build());
     	return path;
 	}
 	
-	public static Path delete(Path path, String nodeName, String description, List<Parameter> params) {
+	public static Path delete(final Path path, final String nodeName, final String description, final List<Parameter> params) {
         final Delete deleteBuilder = new Delete(nodeName, description);
         deleteBuilder.pathParams(params);
     	path.delete(deleteBuilder.build());

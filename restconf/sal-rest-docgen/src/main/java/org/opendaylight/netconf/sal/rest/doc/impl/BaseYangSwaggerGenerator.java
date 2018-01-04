@@ -14,16 +14,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Preconditions;
 
 import io.swagger.models.Info;
-import io.swagger.models.Operation;
 import io.swagger.models.Path;
-import io.swagger.models.RefModel;
-import io.swagger.models.Response;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
-import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.properties.RefProperty;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -315,20 +310,11 @@ public class BaseYangSwaggerGenerator {
         	OperationBuilder.delete(path, node.getQName().getLocalName(), node.getDescription(), pathParams);
 
             if (containsListOrContainer(childSchemaNodes)) {
-            	operationPost(node.getQName().getLocalName(), node.getDescription(),
-            			(DataNodeContainer)node, pathParams, isConfig, parentName + "/", path);
+            	OperationBuilder.configPost(path, parentName + "/" + node.getQName().getLocalName(), node.getDescription(), parentName + "/", (DataNodeContainer)node, pathParams);
             }
         }
         
         return path;
-    }
-
-    private static void operationPost(final String name, final String description,
-            final DataNodeContainer dataNodeContainer, final List<Parameter> pathParams, final boolean isConfig,
-            final String parentName, Path path) {
-        if (isConfig) {
-        	OperationBuilder.post(path, parentName + name, description, parentName, dataNodeContainer, pathParams);
-        }
     }
 
     private String createPath(final DataSchemaNode schemaNode, final List<Parameter> pathParams,
@@ -375,28 +361,7 @@ public class BaseYangSwaggerGenerator {
         final Path rpc = new Path();
         final String resourcePath = parentPath + "/" + resolvePathArgumentsName(rpcDefn, schemaContext);
 
-        final Operation operationSpec = new Operation();
-        operationSpec.setDescription(rpcDefn.getDescription());
-        operationSpec.setOperationId(rpcDefn.getQName().getLocalName());
-        if (!rpcDefn.getOutput().getChildNodes().isEmpty()) {
-        	final Response response = new Response();
-        	final RefProperty property = new RefProperty();
-        	property.set$ref("(" + rpcDefn.getQName().getLocalName() + ")output" + OperationBuilder.TOP);
-        	response.setSchema(property);
-        	response.setDescription(rpcDefn.getDescription());
-            operationSpec.response(200, response);
-        }
-        if (!rpcDefn.getInput().getChildNodes().isEmpty()) {
-            final BodyParameter payload = new BodyParameter();
-            final RefModel model = new RefModel();
-            model.set$ref("(" + rpcDefn.getQName().getLocalName() + ")input" + OperationBuilder.TOP);
-            payload.setSchema(model);
-            operationSpec.setParameters(Collections.singletonList(payload));
-            operationSpec.setConsumes(OperationBuilder.CONSUMES_PUT_POST);
-        }
-
-        rpc.setPost(operationSpec);
-
+        OperationBuilder.operationalPost(rpc, rpcDefn.getQName().getLocalName(), rpcDefn.getDescription(), resourcePath, rpcDefn.getInput(), rpcDefn.getOutput(), new ArrayList<>());
         swagger.path(resourcePath, rpc);
     }
 

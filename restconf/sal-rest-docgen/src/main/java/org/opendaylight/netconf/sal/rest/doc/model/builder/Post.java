@@ -7,52 +7,39 @@
  */
 package org.opendaylight.netconf.sal.rest.doc.model.builder;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
-import org.opendaylight.yangtools.yang.model.api.ListSchemaNode;
 
-import io.swagger.models.RefModel;
-import io.swagger.models.Response;
-import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
-import io.swagger.models.properties.RefProperty;
 
-public final class Post extends Method {
+public class Post extends Method {
     protected String parentName;
-    private final DataNodeContainer dataNodeContainer;
+    protected final DataNodeContainer dataNodeContainer;
 
     public Post(final String nodeName, final String parentName, final String description,
                 final DataNodeContainer dataNodeContainer) {
         super(nodeName, description, MethodName.POST);
         this.parentName = parentName;
         this.dataNodeContainer = dataNodeContainer;
-        final Response response = new Response();
-        final RefProperty schema = new RefProperty();
-        schema.set$ref(OperationBuilder.CONFIG + nodeName + MethodName.POST);
-        response.setSchema(schema);
-        loadResponse(ResponseKey.OK, response);
-        loadResponse(ResponseKey.CONFLICT);
-        operation.setConsumes(OperationBuilder.CONSUMES_PUT_POST);
     }
 
-    @Override
-    public Post pathParams(final List<Parameter> params) {
-        final List<Parameter> parameters = new ArrayList<>(params);
-        for (final DataSchemaNode node : dataNodeContainer.getChildNodes()) {
-            if (node instanceof ListSchemaNode || node instanceof ContainerSchemaNode) {
-                final BodyParameter payload = new BodyParameter();
-                final RefModel schema = new RefModel();
-                schema.set$ref(parentName + OperationBuilder.CONFIG + node.getQName().getLocalName() + OperationBuilder.TOP);
-                payload.setSchema(schema);
-                payload.setName("**" + OperationBuilder.CONFIG + node.getQName().getLocalName());
-                parameters.add(payload);
-            }
+    protected Post bodyParams(final List<Parameter> params) {
+        if(params.size() > 0) {
+        	operation.setConsumes(OperationBuilder.CONSUMES_PUT_POST);
         }
-        operation.setParameters(parameters);
+        operation.setParameters(params);
         return this;
+    }
+        
+    protected Collection<DataSchemaNode> getDataSchemaNodes() {
+    	if(dataNodeContainer != null) {
+    		return dataNodeContainer.getChildNodes();
+    	} else {
+    		return Collections.emptyList();
+    	}
     }
 }

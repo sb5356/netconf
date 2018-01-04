@@ -264,11 +264,13 @@ public class ModelGenerator {
             propMap.put(identityName,props);
             identityObj.setProperties(propMap);
         } else {
-        	
-        	identityObj = new ModelImpl();
+        	// not sure if this is an object
+        	final ModelImpl impl = new ModelImpl();
+        	impl.setType(ModelImpl.OBJECT);
             /*
              * This is a base identity. Add it's base type & move on.
              */
+        	identityObj = impl;
         }
 
         identityObj.setTitle(identityName);
