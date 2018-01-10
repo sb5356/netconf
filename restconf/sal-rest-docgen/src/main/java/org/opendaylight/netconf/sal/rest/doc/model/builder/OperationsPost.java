@@ -12,9 +12,9 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.RefProperty;
 
-public final class OperationalPost extends Post {
+public final class OperationsPost extends Post {
 
-    public OperationalPost(final String nodeName, final String parentName, final String description,
+    public OperationsPost(final String nodeName, final String parentName, final String description,
             final DataNodeContainer requestDataNodeContainer, final DataNodeContainer responseDataNodeContainer) {
 		super(nodeName, parentName, description, requestDataNodeContainer);
        
@@ -32,13 +32,13 @@ public final class OperationalPost extends Post {
         bodyParams();
 	} 
 
-    public OperationalPost bodyParams() {
+    public OperationsPost bodyParams() {
         final List<Parameter> parameters = new ArrayList<>();
         if (!getDataSchemaNodes().isEmpty()) {
             final BodyParameter payload = new BodyParameter();
             final RefModel model = new RefModel();
             model.set$ref("(" + nodeName + ")input" + OperationBuilder.TOP);
-            payload.setName("**" + OperationBuilder.OPERATIONAL + nodeName);
+            payload.setName("**" + OperationBuilder.OPERATIONS + nodeName);
             payload.setSchema(model);
             parameters.add(payload);
         }

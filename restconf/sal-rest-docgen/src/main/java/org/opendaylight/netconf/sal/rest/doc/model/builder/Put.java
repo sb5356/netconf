@@ -25,12 +25,12 @@ public class Put extends Method {
         operation.setDescription(description);
         loadResponse(ResponseKey.CREATED);
         loadResponse(ResponseKey.NO_CONTENT);
-        operation.setConsumes(OperationBuilder.CONSUMES_PUT_POST);
+        operation.setConsumes(OperationBuilder.CONSUMES_BODY);
+        bodyParams();
     }
 
-    @Override
-    public Put pathParams(final List<Parameter> params) {
-        final List<Parameter> parameters = new ArrayList<>(params);
+    public Put bodyParams() {
+        final List<Parameter> parameters = new ArrayList<>();
         final BodyParameter payload = new BodyParameter();
 
         final RefModel schema = new RefModel();
@@ -39,7 +39,7 @@ public class Put extends Method {
         payload.setName(OperationBuilder.CONFIG + nodeName);
         
         parameters.add(payload);
-        operation.setParameters(parameters);
+    	super.bodyParams(parameters);
         return this;
     }
 }

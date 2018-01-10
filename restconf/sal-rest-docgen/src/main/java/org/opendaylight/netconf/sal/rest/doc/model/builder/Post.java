@@ -9,12 +9,10 @@ package org.opendaylight.netconf.sal.rest.doc.model.builder;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 
-import io.swagger.models.parameters.Parameter;
 
 public class Post extends Method {
     protected String parentName;
@@ -25,14 +23,6 @@ public class Post extends Method {
         super(nodeName, description, MethodName.POST);
         this.parentName = parentName;
         this.dataNodeContainer = dataNodeContainer;
-    }
-
-    protected Post bodyParams(final List<Parameter> params) {
-        if(params.size() > 0) {
-        	operation.setConsumes(OperationBuilder.CONSUMES_PUT_POST);
-        }
-        operation.setParameters(params);
-        return this;
     }
         
     protected Collection<DataSchemaNode> getDataSchemaNodes() {

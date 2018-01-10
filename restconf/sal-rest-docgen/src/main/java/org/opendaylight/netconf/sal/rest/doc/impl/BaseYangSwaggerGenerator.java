@@ -8,6 +8,7 @@
 package org.opendaylight.netconf.sal.rest.doc.impl;
 
 import static org.opendaylight.netconf.sal.rest.doc.util.RestDocgenUtil.resolvePathArgumentsName;
+import static org.opendaylight.netconf.sal.rest.doc.util.RestDocgenUtil.resolveNodesName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -194,12 +195,12 @@ public class BaseYangSwaggerGenerator {
                 if (node.isConfiguration()) { // This node's config statement is
                                               // true.
                     resourcePath = getDataStorePath("config", context);
-                    addApis(node, doc, resourcePath, pathParams, schemaContext, true, module.getName(), "config");
+                    addApis(node, doc, resourcePath, pathParams, schemaContext, true, "", "config", module);
                 }
                 pathParams = new ArrayList<>();
                 resourcePath = getDataStorePath("operational", context);
 
-                addApis(node, doc, resourcePath, pathParams, schemaContext, false, module.getName(), "operational");
+                addApis(node, doc, resourcePath, pathParams, schemaContext, false, "", "operational", module);
             }
         }
 
@@ -250,7 +251,7 @@ public class BaseYangSwaggerGenerator {
 
     private void addApis(final DataSchemaNode node, final Swagger swagger, final String parentPath,
             final List<Parameter> parentPathParams, final SchemaContext schemaContext, final boolean addConfigApi,
-            final String parentName, final String dataStore) {
+            final String parentName, final String dataStore, final Module module) {
         final List<Parameter> pathParams = new ArrayList<>(parentPathParams);
 
         final String resourcePath = parentPath + "/" + createPath(node, pathParams, schemaContext);
@@ -261,16 +262,21 @@ public class BaseYangSwaggerGenerator {
             final DataNodeContainer dataNodeContainer = (DataNodeContainer) node;
             childSchemaNodes = dataNodeContainer.getChildNodes();
         }
-        final Path api = operation(node, pathParams, addConfigApi, childSchemaNodes, parentName);
+        final Path api = operation(node, pathParams, addConfigApi, childSchemaNodes, parentName, module, schemaContext);
         swagger.path(resourcePath.concat(getContent(dataStore)), api);
 
         for (final DataSchemaNode childNode : childSchemaNodes) {
             if ((childNode instanceof ListSchemaNode) || (childNode instanceof ContainerSchemaNode)) {
-                // keep config and operation attributes separate.
+                // for config, we need to add the apis for the children
                 if (childNode.isConfiguration() == addConfigApi) {
-                    final String newParent = parentName + "/" + node.getQName().getLocalName();
+                    final String newParent;
+                    if(parentName != "") {
+                    	newParent = parentName + "/" + node.getQName().getLocalName();
+                    } else {
+                    	newParent = node.getQName().getLocalName();
+                    }
                     addApis(childNode, swagger, resourcePath, pathParams, schemaContext, addConfigApi, newParent,
-                            dataStore);
+                            dataStore, module);
                 }
             }
         }
@@ -300,18 +306,25 @@ public class BaseYangSwaggerGenerator {
     }
 
     private static Path operation(final DataSchemaNode node, final List<Parameter> pathParams,
-            final boolean isConfig, final Iterable<DataSchemaNode> childSchemaNodes, final String parentName) {
+            final boolean isConfig, final Iterable<DataSchemaNode> childSchemaNodes, final String parentName, final Module module, final SchemaContext schemaContext) {
     	final Path path = new Path();
 
-    	OperationBuilder.get(path, node.getQName().getLocalName(), node.getDescription(), isConfig, pathParams);
-
         if (isConfig) {
-        	OperationBuilder.put(path, node.getQName().getLocalName(), node.getDescription(), parentName, pathParams);
-        	OperationBuilder.delete(path, node.getQName().getLocalName(), node.getDescription(), pathParams);
+        	OperationBuilder.configGet(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName, pathParams);
+        	OperationBuilder.put(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName, pathParams);
+        	OperationBuilder.delete(path, resolveNodesName(node, module, schemaContext), node.getDescription(), pathParams);
 
             if (containsListOrContainer(childSchemaNodes)) {
-            	OperationBuilder.configPost(path, parentName + "/" + node.getQName().getLocalName(), node.getDescription(), parentName + "/", (DataNodeContainer)node, pathParams);
+                final String newNodeName;
+                if(parentName != "") {
+                	newNodeName = parentName + "/" + resolveNodesName(node, module, schemaContext);
+                } else {
+                	newNodeName = resolveNodesName(node, module, schemaContext);
+                }
+            	OperationBuilder.configPost(path, newNodeName, node.getDescription(), parentName, (DataNodeContainer)node, pathParams);
             }
+        } else {
+        	OperationBuilder.operationalGet(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName);
         }
         
         return path;

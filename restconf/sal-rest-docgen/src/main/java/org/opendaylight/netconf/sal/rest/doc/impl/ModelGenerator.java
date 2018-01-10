@@ -110,19 +110,17 @@ public class ModelGenerator {
 
     private void processModules(final Module module, final Map<String, Model> models,
                                 final SchemaContext schemaContext) {
-        createConcreteModelForPost(models, module.getName() + BaseYangSwaggerGenerator.MODULE_NAME_SUFFIX,
+        createConcreteModelForPost(models, module.getName(),
                 createPropertiesForPost(module, schemaContext, module.getName()));
     }
 
     private void processContainersAndLists(final Module module, final Map<String, Model> models,
                                            final SchemaContext schemaContext) {
-        final String moduleName = module.getName();
-
         for (final DataSchemaNode childNode : module.getChildNodes()) {
             // For every container and list in the module
             if (childNode instanceof ContainerSchemaNode || childNode instanceof ListSchemaNode) {
-                processDataNodeContainer((DataNodeContainer) childNode, moduleName, models, true, schemaContext);
-                processDataNodeContainer((DataNodeContainer) childNode, moduleName, models, false, schemaContext);
+                processDataNodeContainer((DataNodeContainer) childNode, "", models, true, schemaContext, module);
+                processDataNodeContainer((DataNodeContainer) childNode, "", models, false, schemaContext, module);
             }
         }
     }
@@ -143,7 +141,7 @@ public class ModelGenerator {
             final ContainerSchemaNode input = rpc.getInput();
             if (!input.getChildNodes().isEmpty()) {
                 final Map<String, Property> properties =
-                        processChildren(input.getChildNodes(), moduleName, models, true, schemaContext);
+                        processChildren(input.getChildNodes(), moduleName, models, true, schemaContext, module);
 
                 final String filename = "(" + rpc.getQName().getLocalName() + ")input";
                 final ModelImpl childSchema = getOperationTemplate();
@@ -158,7 +156,7 @@ public class ModelGenerator {
             final ContainerSchemaNode output = rpc.getOutput();
             if (!output.getChildNodes().isEmpty()) {
             	final Map<String, Property> properties =
-                        processChildren(output.getChildNodes(), moduleName, models, true, schemaContext);
+                        processChildren(output.getChildNodes(), moduleName, models, true, schemaContext, module);
                 final String filename = "(" + rpc.getQName().getLocalName() + ")output";
                 final ModelImpl childSchema = getOperationTemplate();
                 childSchema.setType(ModelImpl.OBJECT);
@@ -281,14 +279,19 @@ public class ModelGenerator {
     
     private Property processDataNodeContainer(
             final DataNodeContainer dataNode, final String parentName, final Map<String, Model> models, final boolean isConfig,
-            final SchemaContext schemaContext)  {
+            final SchemaContext schemaContext, final Module module)  {
         if (dataNode instanceof ListSchemaNode || dataNode instanceof ContainerSchemaNode) {
             final Iterable<DataSchemaNode> containerChildren = dataNode.getChildNodes();
             final String localName = ((SchemaNode) dataNode).getQName().getLocalName();
+            final String nodeName;
+            if(parentName != "") {
+            	nodeName = parentName + "/" + resolveNodesName(((SchemaNode) dataNode), module, schemaContext);
+            } else {
+            	nodeName = (isConfig ? OperationBuilder.CONFIG : OperationBuilder.OPERATIONAL) + resolveNodesName(((SchemaNode) dataNode), module, schemaContext);
+            }
+
             final Map<String, Property> properties =
-                    processChildren(containerChildren, parentName + "/" + localName, models, isConfig, schemaContext);
-            final String nodeName = parentName + (isConfig ? OperationBuilder.CONFIG : OperationBuilder.OPERATIONAL)
-                    + localName;
+                    processChildren(containerChildren, nodeName, models, isConfig, schemaContext, module);
 
             final ModelImpl childSchema = getOperationTemplate();
             childSchema.setType(ModelImpl.OBJECT);
@@ -299,7 +302,7 @@ public class ModelGenerator {
 
             if (isConfig) {
                 createConcreteModelForPost(models, localName,
-                        createPropertiesForPost(dataNode, schemaContext, parentName + "/" + localName));
+                        createPropertiesForPost(dataNode, schemaContext, nodeName));
             }
 
             return processTopData(nodeName, models, (SchemaNode) dataNode);
@@ -309,7 +312,7 @@ public class ModelGenerator {
 
     private static void createConcreteModelForPost(final Map<String, Model> models, final String localName,
                                                    final Map<String, Property> properties) {
-        final String nodePostName = OperationBuilder.CONFIG + localName + MethodName.POST;
+        final String nodePostName = OperationBuilder.CONFIG + localName + OperationBuilder.TOP;
         final ModelImpl postSchema = getOperationTemplate();
         postSchema.setType(ModelImpl.OBJECT);
         postSchema.setProperties(properties);
@@ -347,7 +350,7 @@ public class ModelGenerator {
      */
     private Map<String, Property> processChildren(
             final Iterable<DataSchemaNode> nodes, final String parentName, final Map<String, Model> models,
-            final boolean isConfig, final SchemaContext schemaContext) {
+            final boolean isConfig, final SchemaContext schemaContext, final Module module) {
         final Map<String, Property> properties = new HashMap<String, Property>();
         for (final DataSchemaNode node : nodes) {
             if (node.isConfiguration() == isConfig) {
@@ -358,7 +361,7 @@ public class ModelGenerator {
 
                 } else if (node instanceof ListSchemaNode) {
                     property = processDataNodeContainer((ListSchemaNode) node, parentName, models, isConfig,
-                            schemaContext);
+                            schemaContext, module);
 
                 } else if (node instanceof LeafListSchemaNode) {
                     property = processLeafListNode((LeafListSchemaNode) node, schemaContext);
@@ -366,7 +369,7 @@ public class ModelGenerator {
                 } else if (node instanceof ChoiceSchemaNode) {
                     if (((ChoiceSchemaNode) node).getCases().iterator().hasNext()) {
                         processChoiceNode(((ChoiceSchemaNode) node).getCases().iterator().next().getChildNodes(),
-                                parentName, models, schemaContext, isConfig, properties);
+                                parentName, models, schemaContext, isConfig, properties, module);
                     }
                     continue;
 
@@ -375,13 +378,13 @@ public class ModelGenerator {
 
                 } else if (node instanceof ContainerSchemaNode) {
                     property = processDataNodeContainer((ContainerSchemaNode) node, parentName, models, isConfig,
-                            schemaContext);
+                            schemaContext, module);
 
                 } else {
                     throw new IllegalArgumentException("Unknown DataSchemaNode type: " + node.getClass());
                 }
                 putDescriptionIfNonNull(property, node.getDescription());
-                properties.put(topLevelModule.getName() + ":" + name, property);
+                properties.put(name, property);
             }
         }
         return properties;
@@ -402,7 +405,7 @@ public class ModelGenerator {
 
     private void processChoiceNode(
             final Iterable<DataSchemaNode> nodes, final String moduleName, final Map<String, Model> models,
-            final SchemaContext schemaContext, final boolean isConfig, final Map<String, Property> properties)
+            final SchemaContext schemaContext, final boolean isConfig, final Map<String, Property> properties, final Module module)
           {
         for (final DataSchemaNode node : nodes) {
             final String name = resolveNodesName(node, topLevelModule, schemaContext);
@@ -413,7 +416,7 @@ public class ModelGenerator {
 
             } else if (node instanceof ListSchemaNode) {
                 property = processDataNodeContainer((ListSchemaNode) node, moduleName, models, isConfig,
-                        schemaContext);
+                        schemaContext, module);
 
             } else if (node instanceof LeafListSchemaNode) {
                 property = processLeafListNode((LeafListSchemaNode) node, schemaContext);
@@ -421,7 +424,7 @@ public class ModelGenerator {
             } else if (node instanceof ChoiceSchemaNode) {
                 if (((ChoiceSchemaNode) node).getCases().iterator().hasNext()) {
                     processChoiceNode(((ChoiceSchemaNode) node).getCases().iterator().next().getChildNodes(),
-                            moduleName, models, schemaContext, isConfig, properties);
+                    		moduleName, models, schemaContext, isConfig, properties, module);
                 }
                 continue;
 
@@ -429,8 +432,8 @@ public class ModelGenerator {
                 property = processAnyXMLNode((AnyXmlSchemaNode) node);
 
             } else if (node instanceof ContainerSchemaNode) {
-                property = processDataNodeContainer((ContainerSchemaNode) node, moduleName, models, isConfig,
-                        schemaContext);
+                property = processDataNodeContainer((ContainerSchemaNode) node, module.getName(), models, isConfig,
+                        schemaContext, module);
 
             } else {
                 throw new IllegalArgumentException("Unknown DataSchemaNode type: " + node.getClass());

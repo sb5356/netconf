@@ -63,4 +63,12 @@ public abstract class Method {
         operation.addResponse(key.value(), response);
         return this;
     }
+    
+    protected Method bodyParams(final List<Parameter> params) {
+        if(params.size() > 0) {
+        	operation.setConsumes(OperationBuilder.CONSUMES_BODY);
+        }
+        operation.setParameters(params);
+        return this;
+    }
 }

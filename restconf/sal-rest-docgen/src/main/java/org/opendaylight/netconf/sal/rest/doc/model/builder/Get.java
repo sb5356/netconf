@@ -15,11 +15,11 @@ import io.swagger.models.properties.RefProperty;
 
 public class Get extends Method {
 
-    public Get(final String nodeName, final String description, final boolean isConfig) {
-    	super((isConfig ? OperationBuilder.CONFIG : OperationBuilder.OPERATIONAL) + nodeName, description, MethodName.GET);
+    public Get(final String nodeName, final String description, final String parentName) {
+    	super(nodeName, description, MethodName.GET);
         final Response response = new Response();
         final RefProperty schema = new RefProperty();
-        schema.set$ref((isConfig ? OperationBuilder.CONFIG : OperationBuilder.OPERATIONAL) + nodeName);
+        schema.set$ref(nodeName);
         response.setSchema(schema);
         loadResponse(ResponseKey.OK, response);
     }
