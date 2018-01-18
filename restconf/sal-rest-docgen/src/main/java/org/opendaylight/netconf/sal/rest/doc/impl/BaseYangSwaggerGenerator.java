@@ -268,7 +268,7 @@ public class BaseYangSwaggerGenerator {
                 if (childNode.isConfiguration() == addConfigApi) {
                     final String newParent;
                     if(parentName != "") {
-                    	newParent = parentName + "/" + resolveNodesName(node, module, schemaContext);
+                    	newParent = parentName + "." + resolveNodesName(node, module, schemaContext);
                     } else {
                     	newParent = resolveNodesName(node, module, schemaContext);
                     }
@@ -309,7 +309,7 @@ public class BaseYangSwaggerGenerator {
         if (isConfig) {
             final String newNodeName;
             if(parentName != "") {
-            	newNodeName = parentName + "/" + resolveNodesName(node, module, schemaContext);
+            	newNodeName = parentName + "." + resolveNodesName(node, module, schemaContext);
             } else {
             	newNodeName = resolveNodesName(node, module, schemaContext);
             }

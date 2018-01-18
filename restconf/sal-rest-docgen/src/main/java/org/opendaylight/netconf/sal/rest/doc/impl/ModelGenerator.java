@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import org.opendaylight.netconf.sal.rest.doc.model.builder.MethodName;
 import org.opendaylight.netconf.sal.rest.doc.model.builder.OperationBuilder;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.model.api.AnyXmlSchemaNode;
@@ -111,7 +110,7 @@ public class ModelGenerator {
     private void processModules(final Module module, final Map<String, Model> models,
                                 final SchemaContext schemaContext) {
         createConcreteModelForPost(models, module.getName(),
-                createPropertiesForPost(module, schemaContext, module.getName()));
+                createPropertiesForPost(module, schemaContext, "", module));
     }
 
     private void processContainersAndLists(final Module module, final Map<String, Model> models,
@@ -285,7 +284,7 @@ public class ModelGenerator {
             final String localName = ((SchemaNode) dataNode).getQName().getLocalName();
             final String nodeName;
             if(parentName != "") {
-            	nodeName = parentName + "/" + resolveNodesName(((SchemaNode) dataNode), module, schemaContext);
+            	nodeName = parentName + "." + resolveNodesName(((SchemaNode) dataNode), module, schemaContext);
             } else {
             	nodeName = (isConfig ? OperationBuilder.CONFIG : OperationBuilder.OPERATIONAL) + resolveNodesName(((SchemaNode) dataNode), module, schemaContext);
             }
@@ -302,7 +301,7 @@ public class ModelGenerator {
 
             if (isConfig) {
                 createConcreteModelForPost(models, localName,
-                        createPropertiesForPost(dataNode, schemaContext, nodeName));
+                        createPropertiesForPost(dataNode, schemaContext, parentName + "." + localName, module));
             }
 
             return processTopData(nodeName, models, (SchemaNode) dataNode);
@@ -320,12 +319,18 @@ public class ModelGenerator {
     }
 
     private Map<String, Property> createPropertiesForPost(final DataNodeContainer dataNodeContainer,
-                                               final SchemaContext schemaContext, final String parentName) {
+                                               final SchemaContext schemaContext, final String parentName, final Module module) {
         final Map<String, Property> properties = new LinkedHashMap<String, Property>();
         for (final DataSchemaNode childNode : dataNodeContainer.getChildNodes()) {
             if (childNode instanceof ListSchemaNode || childNode instanceof ContainerSchemaNode) {
                 final RefProperty items = new RefProperty();
-                items.set$ref(parentName + OperationBuilder.CONFIG + childNode.getQName().getLocalName());
+                final String nodeName;
+                if(parentName != "") {
+                	nodeName = parentName + "." + resolveNodesName(childNode, module, schemaContext);
+                } else {
+                	nodeName = OperationBuilder.CONFIG  + resolveNodesName(childNode, module, schemaContext);
+                }
+                items.set$ref(nodeName);
                 if(childNode instanceof ListSchemaNode) {
 	                final ArrayProperty property = new ArrayProperty();
 	                property.setItems(items);
