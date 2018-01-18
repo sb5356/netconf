@@ -26,7 +26,6 @@ import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
 import java.net.URI;
-import java.sql.Date;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,6 @@ import org.mockito.MockitoAnnotations;
 import org.opendaylight.controller.sal.core.api.model.SchemaService;
 import org.opendaylight.netconf.sal.rest.doc.impl.ApiDocGenerator;
 import org.opendaylight.yangtools.yang.model.api.Module;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +50,7 @@ public class ApiDocGeneratorTest {
 	
     private static final Logger LOG = LoggerFactory.getLogger(ApiDocGeneratorTest.class);
 
-    public static final String HTTP_HOST = "http://host";
-    private static final String NAMESPACE = "http://netconfcentral.org/ns/toaster2";
-    private static final String STRING_DATE = "2009-11-20";
-    private static final Date DATE = Date.valueOf(STRING_DATE);
-    private static final String NAMESPACE_2 = "http://netconfcentral.org/ns/toaster";
-    private static final Date REVISION_2 = Date.valueOf(STRING_DATE);
+    private static final String HTTP_HOST = "http://host";
     private ApiDocGenerator generator;
     private DocGenTestHelper helper;
     

@@ -31,35 +31,35 @@ public final class OperationBuilder {
         CONSUMES_BODY.add("application/xml");
     }
     
-    public static Path configPost(final Path path, final String nodeName, final String description, final String parentName, final DataNodeContainer node, final List<Parameter> params) {
-        final Post postBuilder = new ConfigPost(nodeName, parentName, description, node);
+    public static Path configPost(final Path path, final String nodeName, final String description, final DataNodeContainer node, final List<Parameter> params) {
+        final Post postBuilder = new ConfigPost(nodeName, description, node);
         postBuilder.pathParams(params);
     	path.post(postBuilder.build());
     	return path;
     }
     
-    public static Path operationalPost(final Path path, final String nodeName, final String description, final String parentName, final DataNodeContainer requestNode, final DataNodeContainer responseNode, final List<Parameter> params) {
-        final Post postBuilder = new OperationsPost(nodeName, parentName, description, requestNode, responseNode);
+    public static Path operationalPost(final Path path, final String nodeName, final String description, final DataNodeContainer requestNode, final DataNodeContainer responseNode, final List<Parameter> params) {
+        final Post postBuilder = new OperationsPost(nodeName, description, requestNode, responseNode);
         postBuilder.pathParams(params);
     	path.post(postBuilder.build());
     	return path;
     }
     
     public static Path operationalGet(final Path path, final String nodeName, final String description, final String parentName) {
-        final Get getBuilder = new OperationalGet(nodeName, description, parentName);
+        final Get getBuilder = new OperationalGet(nodeName, description);
     	path.get(getBuilder.build());
     	return path;
     }
     
-    public static Path configGet(final Path path, final String nodeName, final String description, final String parentName, final List<Parameter> params) {
-        final Get getBuilder = new ConfigGet(nodeName, description, parentName);
+    public static Path configGet(final Path path, final String nodeName, final String description, final List<Parameter> params) {
+        final Get getBuilder = new ConfigGet(nodeName, description);
         getBuilder.pathParams(params);
     	path.get(getBuilder.build());
     	return path;
     }
     
-	public static Path put(final Path path, final String nodeName, final String description, final String parentName, final List<Parameter> params) {
-        final Put putBuilder = new Put(nodeName, description, parentName);
+	public static Path put(final Path path, final String nodeName, final String description, final List<Parameter> params) {
+        final Put putBuilder = new Put(nodeName, description);
         putBuilder.pathParams(params);
     	path.put(putBuilder.build());
     	return path;

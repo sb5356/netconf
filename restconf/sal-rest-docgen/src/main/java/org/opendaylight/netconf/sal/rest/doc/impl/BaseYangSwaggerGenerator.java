@@ -66,11 +66,8 @@ public class BaseYangSwaggerGenerator {
     private static final String RESTCONF_DRAFT = "18";
 	private static final String SWAGGER_TITLE = "OpenDaylight RestConf API Documentation";
 
-    static final String MODULE_NAME_SUFFIX = "_module";
-
     private final ModelGenerator modelConverter = new ModelGenerator();
 
-    // private Map<String, ApiDeclaration> MODULE_DOC_CACHE = new HashMap<>()
     private final ObjectMapper mapper = new ObjectMapper();
     private static boolean newDraft;
 
@@ -271,9 +268,9 @@ public class BaseYangSwaggerGenerator {
                 if (childNode.isConfiguration() == addConfigApi) {
                     final String newParent;
                     if(parentName != "") {
-                    	newParent = parentName + "/" + node.getQName().getLocalName();
+                    	newParent = parentName + "/" + resolveNodesName(node, module, schemaContext);
                     } else {
-                    	newParent = node.getQName().getLocalName();
+                    	newParent = resolveNodesName(node, module, schemaContext);
                     }
                     addApis(childNode, swagger, resourcePath, pathParams, schemaContext, addConfigApi, newParent,
                             dataStore, module);
@@ -310,18 +307,19 @@ public class BaseYangSwaggerGenerator {
     	final Path path = new Path();
 
         if (isConfig) {
-        	OperationBuilder.configGet(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName, pathParams);
-        	OperationBuilder.put(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName, pathParams);
-        	OperationBuilder.delete(path, resolveNodesName(node, module, schemaContext), node.getDescription(), pathParams);
+            final String newNodeName;
+            if(parentName != "") {
+            	newNodeName = parentName + "/" + resolveNodesName(node, module, schemaContext);
+            } else {
+            	newNodeName = resolveNodesName(node, module, schemaContext);
+            }
+            
+        	OperationBuilder.configGet(path, newNodeName, node.getDescription(), pathParams);
+        	OperationBuilder.put(path, newNodeName, node.getDescription(), pathParams);
+        	OperationBuilder.delete(path, newNodeName, node.getDescription(), pathParams);
 
             if (containsListOrContainer(childSchemaNodes)) {
-                final String newNodeName;
-                if(parentName != "") {
-                	newNodeName = parentName + "/" + resolveNodesName(node, module, schemaContext);
-                } else {
-                	newNodeName = resolveNodesName(node, module, schemaContext);
-                }
-            	OperationBuilder.configPost(path, newNodeName, node.getDescription(), parentName, (DataNodeContainer)node, pathParams);
+            	OperationBuilder.configPost(path, newNodeName, node.getDescription(), (DataNodeContainer)node, pathParams);
             }
         } else {
         	OperationBuilder.operationalGet(path, resolveNodesName(node, module, schemaContext), node.getDescription(), parentName);
@@ -374,7 +372,7 @@ public class BaseYangSwaggerGenerator {
         final Path rpc = new Path();
         final String resourcePath = parentPath + "/" + resolvePathArgumentsName(rpcDefn, schemaContext);
 
-        OperationBuilder.operationalPost(rpc, rpcDefn.getQName().getLocalName(), rpcDefn.getDescription(), resourcePath, rpcDefn.getInput(), rpcDefn.getOutput(), new ArrayList<>());
+        OperationBuilder.operationalPost(rpc, rpcDefn.getQName().getLocalName(), rpcDefn.getDescription(), rpcDefn.getInput(), rpcDefn.getOutput(), new ArrayList<>());
         swagger.path(resourcePath, rpc);
     }
 

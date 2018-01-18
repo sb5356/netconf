@@ -11,9 +11,9 @@ import io.swagger.models.parameters.Parameter;
 
 public final class ConfigPost extends Post {
 
-    public ConfigPost(final String nodeName, final String parentName, final String description,
+    public ConfigPost(final String nodeName, final String description,
             final DataNodeContainer dataNodeContainer) {
-		super(nodeName, parentName, description, dataNodeContainer);
+		super(nodeName, description, dataNodeContainer);
         loadResponse(ResponseKey.CONFLICT);
         loadResponse(ResponseKey.CREATED);
         bodyParams();
@@ -24,7 +24,7 @@ public final class ConfigPost extends Post {
         final BodyParameter payload = new BodyParameter();
         
         final RefModel schema = new RefModel();
-        schema.set$ref(parentName + OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP);    
+        schema.set$ref(OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP);    
         payload.setSchema(schema);
         payload.setName(OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP);
         

@@ -15,7 +15,7 @@ import io.swagger.models.properties.RefProperty;
 
 public class Get extends Method {
 
-    public Get(final String nodeName, final String description, final String parentName) {
+    public Get(final String nodeName, final String description) {
     	super(nodeName, description, MethodName.GET);
         final Response response = new Response();
         final RefProperty schema = new RefProperty();

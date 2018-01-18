@@ -6,8 +6,8 @@ import io.swagger.models.parameters.Parameter;
 
 public final class ConfigGet extends Get {
 
-    public ConfigGet(final String nodeName, final String description, final String parentName) {
-		super(OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP, description, parentName);
+    public ConfigGet(final String nodeName, final String description) {
+		super(OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP, description);
 	} 
 
     @Override

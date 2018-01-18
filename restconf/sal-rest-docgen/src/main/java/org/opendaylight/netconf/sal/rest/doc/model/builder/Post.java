@@ -15,13 +15,11 @@ import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 
 
 public class Post extends Method {
-    protected String parentName;
     protected final DataNodeContainer dataNodeContainer;
 
-    public Post(final String nodeName, final String parentName, final String description,
+    public Post(final String nodeName, final String description,
                 final DataNodeContainer dataNodeContainer) {
         super(nodeName, description, MethodName.POST);
-        this.parentName = parentName;
         this.dataNodeContainer = dataNodeContainer;
     }
         

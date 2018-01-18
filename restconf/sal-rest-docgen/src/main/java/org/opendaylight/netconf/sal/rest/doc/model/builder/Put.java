@@ -16,11 +16,9 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 
 public class Put extends Method {
-    protected String parentName;
 
-    public Put(final String nodeName, final String description, final String parentName) {
+    public Put(final String nodeName, final String description) {
     	super(nodeName, description, MethodName.PUT);
-        this.parentName = parentName;
         operation = new Operation();
         operation.setDescription(description);
         loadResponse(ResponseKey.CREATED);
@@ -34,7 +32,7 @@ public class Put extends Method {
         final BodyParameter payload = new BodyParameter();
 
         final RefModel schema = new RefModel();
-        schema.set$ref(parentName + OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP);    
+        schema.set$ref(OperationBuilder.CONFIG + nodeName + OperationBuilder.TOP);    
         payload.setSchema(schema);
         payload.setName(OperationBuilder.CONFIG + nodeName);
         

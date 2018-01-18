@@ -15,6 +15,7 @@ public final class Delete extends Method {
 
     public Delete(final String nodeName, final String description) {
         super(nodeName, description, MethodName.DELETE);
+        loadResponse(ResponseKey.NO_CONTENT);
     }
     
     @Override

@@ -14,9 +14,9 @@ import io.swagger.models.properties.RefProperty;
 
 public final class OperationsPost extends Post {
 
-    public OperationsPost(final String nodeName, final String parentName, final String description,
+    public OperationsPost(final String nodeName, final String description,
             final DataNodeContainer requestDataNodeContainer, final DataNodeContainer responseDataNodeContainer) {
-		super(nodeName, parentName, description, requestDataNodeContainer);
+		super(nodeName, description, requestDataNodeContainer);
        
         final Operation operationSpec = new Operation();
         operationSpec.setOperationId(nodeName);
