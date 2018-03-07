@@ -46,14 +46,12 @@ public class MountPointSwaggerTest {
     private static final String INSTANCE_URL = "/nodes/node/123/";
     private MountPointSwagger swagger;
     private DocGenTestHelper helper;
-    private SchemaContext schemaContext;
 
     @Before
     public void setUp() throws Exception {
         this.swagger = new MountPointSwagger();
         this.helper = new DocGenTestHelper();
         this.helper.setUp("/yang/toaster", "/yang/toaster2", "/yang/opflex", "/yang/toaster-augmented");
-        this.schemaContext = this.helper.getSchemaContext();
     }
 
     @Test()
@@ -65,7 +63,7 @@ public class MountPointSwaggerTest {
 
     @Test()
     public void getInstanceIdentifiers() throws Exception {
-        final UriInfo mockInfo = setUpSwaggerForDocGeneration();
+        setUpSwaggerForDocGeneration();
 
         assertEquals(0, this.swagger.getInstanceIdentifiers().size());
         this.swagger.onMountPointCreated(INSTANCE_ID); // add this ID into the list of
