@@ -356,17 +356,22 @@ public class ApiDocGeneratorTest {
     }
 
     private void validateTosterDocContainsModulePrefixes(final Swagger doc) {
-        final Map<String, Model> topLevelJson = doc.getDefinitions();
+        final Map<String, Model> models = doc.getDefinitions();
 
-        final Model configToaster = topLevelJson.get("toaster2(config)toaster");
-        assertNotNull("(config)toaster JSON object missing", configToaster);
+        final Model configToasterTop = models.get("(config)toaster-TOP");
+        assertNotNull("(config)toaster-TOP model missing", configToasterTop);
+        containsProperties(configToasterTop, "toaster2:toaster");
+        
+        final Model configToaster = models.get("(config)toaster");
+        assertNotNull("(config)toaster model missing", configToaster);
         // without module prefix
-        containsProperties(configToaster, "toaster2:toasterSlot");
+        containsProperties(configToaster, "toasterSlot");
 
-        final Model toasterSlot = topLevelJson.get("toaster2/toaster(config)toasterSlot");
-        assertNotNull("(config)toasterSlot JSON object missing", toasterSlot);
+
+        final Model toasterSlot = models.get("(config)toaster.toasterSlot");
+        assertNotNull("(config)toaster.toasterSlot model missing", toasterSlot);
         // with module prefix
-        containsProperties(toasterSlot, "toaster2:toaster-augmented:slotInfo");
+        containsProperties(toasterSlot, "toaster-augmented:slotInfo");
     }
 
     private void containsProperties(final Model jsonObject, final String... properties) {

@@ -171,39 +171,38 @@ public class ModelGenerator {
     private Property processTopData(final String filename, final Map<String, Model> models, final SchemaNode schemaNode) {
         return schemaNode instanceof ListSchemaNode ? 
         		processTopData(filename, models, (ListSchemaNode) schemaNode, new ArrayProperty()) : 
-        			processTopData(filename, models, schemaNode, new ObjectProperty());
+        			processTopData(filename, models, schemaNode, new RefProperty());
     }
     
     private Property processTopData(final String filename, final Map<String, Model> models, final ListSchemaNode schemaNode,  final ArrayProperty dataNodeProperties) {
         final RefProperty items = new RefProperty();
-
         items.set$ref(filename);
         dataNodeProperties.setItems(items);
 
-        putDescriptionIfNonNull(dataNodeProperties, schemaNode.getDescription());
-        final Map<String, Property> properties = new HashMap<String, Property>();;
-        properties.put(topLevelModule.getName() + ":" + schemaNode.getQName().getLocalName(), dataNodeProperties);
-        final ModelImpl finalChildSchema = getOperationTemplate();
-        finalChildSchema.setType(ModelImpl.OBJECT);
-        finalChildSchema.setProperties(properties);
-        finalChildSchema.setName(filename + OperationBuilder.TOP);
-        models.put(filename + OperationBuilder.TOP, finalChildSchema);
-
-        return dataNodeProperties;
+        return processBaseTopData(filename, models, schemaNode, dataNodeProperties);
     }
     
-    private Property processTopData(final String filename, final Map<String, Model> models, final SchemaNode schemaNode,  final ObjectProperty dataNodeProperties) {
-        final RefProperty items = new RefProperty();
-
-        items.set$ref(filename);
-        final Map<String, Property> objectProperties = new HashMap<String, Property>();
-        objectProperties.put("items", items);
-        dataNodeProperties.setProperties(objectProperties);
-
-        putDescriptionIfNonNull(dataNodeProperties, schemaNode.getDescription());
+    private Property processTopData(final String filename, final Map<String, Model> models, final SchemaNode schemaNode,  final RefProperty dataNodeProperties) {
+        dataNodeProperties.set$ref(filename);
+        return processBaseTopData(filename, models, schemaNode, dataNodeProperties);
+    }
+    
+    private Property processBaseTopData(final String filename, final Map<String, Model> models, final SchemaNode schemaNode, final Property dataNodeProperties) {
         final Map<String, Property> properties = new HashMap<String, Property>();
+        /* TODO: this fails in certain case:
+        '(config)toaster.toasterSlot.toaster-augmented:slotInfo-TOP': 
+        type: object
+        properties:
+          'toaster2:slotInfo':
+        but should be ( i think)
+		  '(config)toaster.toasterSlot.toaster-augmented:slotInfo-TOP':
+		    type: object
+		    properties:
+		      'toaster-augmented:slotInfo':
+        */        
         properties.put(topLevelModule.getName() + ":" + schemaNode.getQName().getLocalName(), dataNodeProperties);
         final ModelImpl finalChildSchema = getOperationTemplate();
+        putDescriptionIfNonNull(finalChildSchema, schemaNode.getDescription());
         finalChildSchema.setType(ModelImpl.OBJECT);
         finalChildSchema.setProperties(properties);
         finalChildSchema.setName(filename + OperationBuilder.TOP);
@@ -515,7 +514,7 @@ public class ModelGenerator {
         	property = processLeafRef(node, schemaContext, (LeafrefTypeDefinition) leafTypeDef);
 
         } else if (leafTypeDef instanceof BooleanTypeDefinition) {
-        	property = processBooleanType();
+        	property = processBooleanType((BooleanTypeDefinition)leafTypeDef);
 
         } else if (leafTypeDef instanceof DecimalTypeDefinition) {
         	property = processDecimalType((DecimalTypeDefinition)leafTypeDef);
@@ -540,6 +539,7 @@ public class ModelGenerator {
     	final IntegerProperty property = new IntegerProperty();
     	property.setExample((Object)String.valueOf(leafTypeDef.getRangeConstraints()
                 .iterator().next().getMin()));
+    	property.setDefault(String.valueOf(leafTypeDef.getDefaultValue()));
 		return property;
 	}
     
@@ -547,6 +547,7 @@ public class ModelGenerator {
     	final IntegerProperty property = new IntegerProperty();
     	property.setExample((Object)String.valueOf(leafTypeDef.getRangeConstraints()
                 .iterator().next().getMin()));
+    	property.setDefault(String.valueOf(leafTypeDef.getDefaultValue()));
 		return property;
 	}
     
@@ -554,12 +555,14 @@ public class ModelGenerator {
     	final DecimalProperty property = new DecimalProperty();
     	property.setExample((Object)String.valueOf(leafTypeDef.getRangeConstraints()
                 .iterator().next().getMin()));
+    	property.setDefault(String.valueOf(leafTypeDef.getDefaultValue()));
 		return property;
 	}
     
-    private BooleanProperty processBooleanType() {
+    private BooleanProperty processBooleanType(BooleanTypeDefinition leafTypeDef) {
     	final BooleanProperty property = new BooleanProperty();
     	property.setExample((Object)"true");
+    	property.setDefault(String.valueOf(leafTypeDef.getDefaultValue()));
 		return property;
 	}
 
